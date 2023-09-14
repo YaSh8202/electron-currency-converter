@@ -22,28 +22,43 @@ async function getExchangeRateData(from?: string) {
 }
 
 function App() {
-  const [amount, setAmount] = useState<number>(0);
-  const [from, setFrom] = useState<Currency>();
-  const [to, setTo] = useState<Currency>();
-  const [convertedAmount, setConvertedAmount] = useState<number>();
+  const [amount, setAmount] = useState<string>("");
+  const [from, setFrom] = useState<Currency>(
+    countryCurrencies.find((currency) => currency.code === "USD") as Currency
+  );
+  const [to, setTo] = useState<Currency>(
+    countryCurrencies.find((currency) => currency.code === "INR") as Currency
+  );
+  const [error, setError] = useState<string>("");
+  const [result, setResult] = useState<[string, string]>();
 
   const { data, isLoading } = useQuery(
     [from?.code],
     () => getExchangeRateData(from?.code),
     {
       enabled: !!from,
-      cacheTime: 1000 * 60 * 60 * 24, // 1 day
+      refetchOnWindowFocus: false,
     }
   );
 
   function convertHandler() {
+    if (!amount) {
+      setError("Please enter a valid amount");
+      return;
+    }
+
+    setError("");
+
     const exchangeRate = data?.conversion_rates[to?.code as string];
 
     if (!exchangeRate) return;
 
-    const convertedAmount = exchangeRate ? amount * exchangeRate : 0;
+    const convertedAmount = exchangeRate ? parseInt(amount) * exchangeRate : 0;
 
-    setConvertedAmount(convertedAmount);
+    const firstString = `${amount} ${from?.currency} =`;
+    const secondString = `${convertedAmount.toFixed(2)} ${to?.currency}`;
+
+    setResult([firstString, secondString]);
   }
 
   return (
@@ -51,7 +66,7 @@ function App() {
       <h1 className="font-bold text-3xl text-center">
         Electron Currency Converter
       </h1>
-      <div className="flex flex-row items-center gap-5  justify-center my-12  ">
+      <div className="flex flex-row items-start gap-5  justify-center my-12  ">
         <div className="flex flex-col ">
           <p className="text-lg font-medium">Amount</p>
           <input
@@ -60,10 +75,15 @@ function App() {
             placeholder="Enter amount"
             value={amount}
             onChange={(e) => {
-              setAmount(parseInt(e.target.value));
+              const regex = /^[0-9]*\.?[0-9]*$/;
+              if (e.target.value === "" || regex.test(e.target.value)) {
+                const removeLeadingZero = e.target.value.replace(/^0+/, "");
+                setAmount(removeLeadingZero);
+                setError("");
+              }
             }}
-            pattern="[0-9]+"
           />
+          {error && <p className="text-red-500 text-sm">{error}</p>}
         </div>
 
         <div className="flex flex-col ">
@@ -104,14 +124,10 @@ function App() {
         </div>
       </div>
       <div className="flex flex-row items-start  justify-between w-full">
-        {convertedAmount && (
+        {result && (
           <div className="flex flex-col gap-2">
-            <p className="text-gray-500">
-              {amount} {from?.currency} ={" "}
-            </p>
-            <p className="font-semibold text-2xl">
-              {convertedAmount} {to?.currency}
-            </p>
+            <p className="text-gray-500">{result[0]}</p>
+            <p className="font-semibold text-2xl">{result[1]}</p>
           </div>
         )}
         <button
