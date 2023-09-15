@@ -60,7 +60,7 @@ pnpm dev
 
 This will start the application in development mode. You can now make changes to the code and the application will reload with the changes.
 
-### 6. Build the application
+### 7. Build the application
 Build the application for production:
 
 ```bash
