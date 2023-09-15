@@ -43,7 +43,15 @@ Install the dependencies in the local node_modules folder:
 pnpm install
 ```
 
-### 5. Run the application
+### 5. Environment variables
+Go to [ExchangeRate-API](https://www.exchangerate-api.com/) and create an account to get your API key. Then, create a `.env.local` file in the project directory and add the following line to it:
+
+```bash
+VITE_API_KEY=YOUR_API_KEY
+```
+
+
+### 6. Run the application
 Run the application in development mode:
 
 ```bash
